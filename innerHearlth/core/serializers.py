@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import Appointment, Doctor, Especiality, Patient
 from authentication.serializers import UserSerializer
+from django.contrib.auth.models import User
 
 
 class EspecialitySerialiazer(serializers.ModelSerializer):
@@ -14,36 +15,75 @@ class EspecialitySerialiazer(serializers.ModelSerializer):
 
 
 class DoctorSerialiazer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    user_id = serializers.IntegerField(write_only=True)
+    user = UserSerializer()
 
     especiality = EspecialitySerialiazer(read_only=True)
     especiality_id = serializers.IntegerField(write_only=True)
+
+    user_rol = serializers.SerializerMethodField()
 
     class Meta:
         model = Doctor
         fields = (
             'pk',
             'user',
-            'user_id',
             'especiality',
             'especiality_id',
-            'phone'
+            'phone',
+            'user_rol'
         )
+
+    def get_user_rol(self, obj):
+        return type(obj).__name__
+
+    def create(self, validated_data):
+        user_data = validated_data.pop('user', None)
+
+        if not user_data:
+            raise Exception('No user data were provided')
+
+        user = User.objects.create_user(
+            **user_data
+        )
+        doctor = Doctor.objects.create(
+            user=user,
+            **validated_data
+        )
+
+        return doctor
 
 
 class PatientSerialiazer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    user_id = serializers.IntegerField(write_only=True)
+    user = UserSerializer()
+    user_rol = serializers.SerializerMethodField()
 
     class Meta:
         model = Patient
         fields = (
             'pk',
             'user',
-            'user_id',
-            'phone'
+            'phone',
+            'user_rol'
         )
+
+    def get_user_rol(self, obj):
+        return type(obj).__name__
+
+    def create(self, validated_data):
+        user_data = validated_data.pop('user', None)
+
+        if not user_data:
+            raise Exception('No user data were provided')
+
+        user = User.objects.create_user(
+            **user_data
+        )
+        patient = Patient.objects.create(
+            user=user,
+            **validated_data
+        )
+
+        return patient
 
 
 class AppointmentSerialiazer(serializers.ModelSerializer):

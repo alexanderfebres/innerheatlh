@@ -24,6 +24,7 @@ class Patient(InnerHealthAbstractClass):
 
     user = models.OneToOneField(
         User,
+        related_name='user_patient',
         on_delete=models.CASCADE,
         verbose_name=("User")
     )
@@ -45,6 +46,7 @@ class Doctor(InnerHealthAbstractClass):
 
     user = models.OneToOneField(
         User,
+        related_name='user_doctor',
         on_delete=models.CASCADE,
         verbose_name=("User")
     )

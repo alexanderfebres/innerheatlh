@@ -10,6 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from .serializers import UserSerializer
+from core.models import Doctor, Patient
 
 
 class UserListView(ListAPIView):
@@ -35,6 +36,7 @@ class LoginAPIView(APIView):
     def post(self, request):
         username = request.data.get("username", None)
         password = request.data.get("password", None)
+        print(password, username)
 
         if username in ['', None]:
             return Response({"detail": "No se proporciono un nombre de usuario"},
@@ -52,6 +54,9 @@ class LoginAPIView(APIView):
 
         token, _ = Token.objects.get_or_create(user=user)
 
+        is_doctor = Doctor.objects.filter(user=user).exists()
+        is_patient = Patient.objects.filter(user=user).exists()
+
         user_data = {
             "user_id": user.id,
             "username": user.username,
@@ -60,7 +65,9 @@ class LoginAPIView(APIView):
             "email": user.email,
             "token": token.key,
             "is_staff": user.is_staff,
-            "is_superuser": user.is_superuser
+            "is_superuser": user.is_superuser,
+            "is_doctor": is_doctor,
+            "is_patient": is_patient
         }
 
         return Response(data=user_data, status=HTTP_200_OK)
@@ -68,7 +75,7 @@ class LoginAPIView(APIView):
 
 class SignUpAPIView(APIView):
     """
-    Sign-up View. 
+    Sign-up View.
     RETURNS User Instance
 
     METHOD POST.
